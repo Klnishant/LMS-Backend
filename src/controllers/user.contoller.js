@@ -36,18 +36,18 @@ const registerUser = asyncHandler(async (req,res)=> {
         throw new ApiError(400,"All fields are required");
     }
 
-    const existedUser = await User.find({email});
+    const existedUser = await User.findOne({email});
 
     if (existedUser) {
         throw new ApiError(400,"Email already registerd");
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    const avatarLocalPath = req.file?.avatar[0]?.path;
 
     let avatar = "";
 
     if (avatarLocalPath) {
-        avatar = await uploadOnCloudinary(avatar);
+        avatar = await uploadOnCloudinary(avatarLocalPath);
     }
 
     const user = await User.create({
@@ -85,15 +85,16 @@ const logIn = asyncHandler( async (req,res)=> {
         throw new ApiError(400,"Invalid email");
     }
 
-    const isPasswordValid = user.isPasswordCorrect(password);
+    const isPasswordValid = await user.isPasswordCorrect(password);
 
     if (!isPasswordValid) {
         throw new ApiError(400,"Invalid credentials");
     }
 
-    const {accessToken,refreshToken} = await generateAccessAndRefreshToken();
+    const {accessToken,refreshToken} = await generateAccessAndRefreshToken(user?.id);
+    console.log(accessToken,refreshToken);
 
-    const loggedInUser = user.select("-password -refreshToken");
+    const loggedInUser = await User.findById(user?._id).select("-password -refreshToken");
 
     const options = {
         httpOnly:true,
@@ -131,8 +132,8 @@ const logOut = asyncHandler( async (req,res)=> {
 
     return res
     .status(200)
-    .cookie("accessToken",accessToken,options)
-    .cookie("refreshToken",refreshToken,options)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
     .json(
         new ApiResponse(200,{},"User logOut successfully")
     );
@@ -178,8 +179,7 @@ const refreshAccessToken = asyncHandler(async (req,res) =>{
 });
 
 const changeCurrentPassword = asyncHandler(async (req,res) =>{
-    try {
-        const {oldPassword,newPassword} = req.body;
+    const {oldPassword,newPassword} = req.body;
 
         const user = await User.findById(req.user?._id);
         const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
@@ -196,10 +196,6 @@ const changeCurrentPassword = asyncHandler(async (req,res) =>{
         .json(
             new ApiResponse(200,{},"Password changed successfully")
         )
-
-    } catch (error) {
-        throw new ApiError(400,"Invalid credential");
-    }
 });
 
 const updateProfile = asyncHandler( async (req,res)=> {
@@ -209,12 +205,12 @@ const updateProfile = asyncHandler( async (req,res)=> {
         throw new ApiError(400,"Full name or email required");
     }
 
-    const avatarLocalPath = req.file?.avatar[0]?.path
+    const avatarLocalPath = req.files?.avatar[0]?.path
 
     let avatar = "";
 
     if (avatarLocalPath) {
-        avatar = await uploadOnCloudinary(avatar);
+        avatar = await uploadOnCloudinary(avatarLocalPath);
     }
 
     const user = await User.findByIdAndUpdate(
@@ -222,13 +218,14 @@ const updateProfile = asyncHandler( async (req,res)=> {
         {
             $set:{
                 fullName,
-                email,
             }
         },
         {
             new:true
         }
     ).select("-password, -refreshToken");
+
+    console.log(user);
 
     return res
     .status(200)
