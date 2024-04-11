@@ -1,7 +1,6 @@
 import { configDotenv } from "dotenv";
 import connectDb from "./db/index.js";
 import app from "./app.js";
-import { error } from "console";
 
 configDotenv(
     {

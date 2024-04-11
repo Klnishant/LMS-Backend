@@ -16,7 +16,7 @@ const createCourse = asyncHandler(async (req,res)=> {
     let thumbnail = "";
 
     if (thumbnailLocalPath) {
-        thumbnail= uploadOnCloudinary(thumbnailLocalPath);
+        thumbnail= await uploadOnCloudinary(thumbnailLocalPath);
     }
 
     const course = await Course.create({
@@ -24,7 +24,7 @@ const createCourse = asyncHandler(async (req,res)=> {
         description,
         category,
         createdBy,
-        thumbnail,
+        thumbnail:thumbnail,
     });
 
     if (!course) {
@@ -42,16 +42,16 @@ const updateCourseById = asyncHandler( async (req,res)=>{
         throw new ApiError(400,"course id not found");
     }
 
-    const thumbnailLocalPath = req.file?.thumbnail[0]?.path;
+    const thumbnailLocalPath = req.file?.path;
     let thumbnail = req.user?.thumbnail;
 
     if (thumbnailLocalPath) {
-        thumbnail = uploadOnCloudinary(thumbnailLocalPath);
+        thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
     }
 
     const course = await Course.findByIdAndUpdate(
         {
-            _id: new mongoose.Schema.objectId(courseId)
+            _id: new mongoose.Types.ObjectId(courseId)
         },
         {
             $set:{
@@ -71,7 +71,7 @@ const updateCourseById = asyncHandler( async (req,res)=>{
     }
 
     return res
-    .statusa(200)
+    .status(200)
     .json(
         new ApiResponse(200,course,"course updated successfully")
     );
@@ -134,7 +134,7 @@ const addLecturesToCourseById = asyncHandler(async (req,res)=> {
     const lectureLocalPath = req.files?.lectures[0]?.path;
     
     if (lectureData) {
-        const lecture = uploadOnCloudinary(lectureLocalPath);
+        const lecture = await uploadOnCloudinary(lectureLocalPath);
 
         lectureData.lecture=lecture;
     }
@@ -157,7 +157,7 @@ const addLecturesToCourseById = asyncHandler(async (req,res)=> {
 
 const updateLectureById = asyncHandler(async (req,res)=> {
     const {title,description} = req.body;
-    const {courseId,lectureId} = req.query;
+    const {courseId,lectureId} = req.params;
 
     if (!(isValidObjectId(courseId) || isValidObjectId(lectureId))) {
         throw new ApiError(400,"invalid course or lecture id");
@@ -173,7 +173,7 @@ const updateLectureById = asyncHandler(async (req,res)=> {
         throw new ApiError(400,"course not found");
     }
 
-    const lectureIndex = course.lectures.findIndex(lecture=>lecture._id.toString()===lectureId);
+    const lectureIndex = course.lectures.findIndex(lecture=>lecture._id.toString()==lectureId);
 
     if (lectureIndex==-1) {
         throw new ApiError(400,"lecture not found");
@@ -201,7 +201,7 @@ const updateLectureById = asyncHandler(async (req,res)=> {
 });
 
 const deleteCourseLecture = asyncHandler(async (req,res)=> {
-    const {courseId,lectureId} = req.query;
+    const {courseId,lectureId} = req.params;
 
     if (!(isValidObjectId(courseId) || isValidObjectId(lectureId))) {
         throw new ApiError(400,"course or lecture id is invalid");
