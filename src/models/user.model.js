@@ -37,6 +37,14 @@ const userSchema = new Schema(
             default: 'USER',
             enum: ['USER', 'ADMIN']
         },
+        subscription:{
+            id:{
+                type:String,
+            },
+            status:{
+                type:String,
+            }
+        }
     },
     {
         timestamps:true,

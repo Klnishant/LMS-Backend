@@ -16,8 +16,10 @@ app.use(express.static("public"));
 
 import userRouter from "./routes/user.route.js";
 import courseRouter from "./routes/course.route.js";
+import paymentRouter from "./routes/payment.route.js";
 
 app.use("/api/v1/user",userRouter);
 app.use("/api/v1/course",courseRouter);
+app.use("/api/v1/payment",paymentRouter);
 
 export default app;

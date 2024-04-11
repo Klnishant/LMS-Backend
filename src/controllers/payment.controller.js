@@ -1,14 +1,14 @@
 import {asyncHandler} from "../utils/AsyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
-import { Payment } from "../models/payment.model.js";
-import Razorpay from "razorpay";
 import { User } from "../models/user.model.js";
+import { Payment } from "../models/payment.model.js";
 import crypto from "crypto";
+import Razorpay from "razorpay";
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
+export const razorpay = new Razorpay ({
+    key_id:`${process.env.RAZORPAY_KEY_ID}`,
+    key_secret:`${process.env.RAZORPAY_KEY_SECRET}`
 });
 
 const getRazorpayApiKey = asyncHandler( async (req,res)=> {
@@ -32,10 +32,10 @@ const buySubscription = asyncHandler(async (req,res)=> {
         throw new ApiError(400,"Admin not buy course");
     }
 
-    const subscription = razorpay.subscriptions.create({
-        plan_id:process.env.RAZORPAY_PLAN_ID,
-        customer_notify:1,
-        total_count:1,
+    const subscription = await razorpay.subscriptions.create({
+        plan_id: process.env.RAZORPAY_PLAN_ID,
+        customer_notify: 1,
+        total_count: 1,
     });
 
     user.subscription.id = subscription.id;
