@@ -42,7 +42,7 @@ const registerUser = asyncHandler(async (req,res)=> {
         throw new ApiError(400,"Email already registerd");
     }
 
-    const avatarLocalPath = req.file?.avatar[0]?.path;
+    const avatarLocalPath = req.file?.path;
 
     let avatar = "";
 
@@ -199,13 +199,13 @@ const changeCurrentPassword = asyncHandler(async (req,res) =>{
 });
 
 const updateProfile = asyncHandler( async (req,res)=> {
-    const {fullName,email} = req.body;
+    let {fullName,email} = req.body;
 
     if (!(fullName || email)) {
         throw new ApiError(400,"Full name or email required");
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path
+    const avatarLocalPath = req.file?.path
 
     let avatar = "";
 
@@ -213,11 +213,27 @@ const updateProfile = asyncHandler( async (req,res)=> {
         avatar = await uploadOnCloudinary(avatarLocalPath);
     }
 
+    const users = await User.findById(req.user.id);
+
+    if (!email) {
+        email = users.email;
+    }
+
+    if (!fullName) {
+        fullName = users.fullName;
+    }
+
+    if (!avatar) {
+        avatar = users.avatar;
+    }
+
     const user = await User.findByIdAndUpdate(
         req.user?.id,
         {
             $set:{
                 fullName,
+                email,
+                avatar
             }
         },
         {

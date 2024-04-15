@@ -11,15 +11,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 const router = Router();
 
 router.route("/register").post(
-    upload.fields(
-        [
-            {
-                name:"avatar",
-                maxCount:1
-            }
-        ]
-    )
-    ,registerUser);
+    upload.single("avatar"),registerUser);
 router.route("/logIn").post(logIn);
 router.route("/logOut").delete(verifyJWT,logOut);
 router.route("/profile").get(verifyJWT,getProfile);
