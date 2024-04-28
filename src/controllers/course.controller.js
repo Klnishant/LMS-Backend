@@ -114,6 +114,9 @@ const removeCourse = asyncHandler( async (req,res)=> {
 const addLecturesToCourseById = asyncHandler(async (req,res)=> {
     const {courseId} = req.params;
     const {title,description}=req.body;
+    console.log(courseId);
+    console.log(title);
+    console.log(description);
 
     if (!(isValidObjectId(courseId) || (title && description))) {
         throw new ApiError(400,"invalid object id or empty fields");
@@ -132,9 +135,13 @@ const addLecturesToCourseById = asyncHandler(async (req,res)=> {
     }
 
     const lectureLocalPath = req.files?.lectures[0]?.path;
+    console.log(lectureLocalPath);
     
     if (lectureData) {
         const lecture = await uploadOnCloudinary(lectureLocalPath);
+        if (!lecture) {
+            throw new ApiError(500,"Lecture not uploaded");
+        }
 
         lectureData.lecture=lecture;
     }
@@ -207,7 +214,11 @@ const deleteCourseLecture = asyncHandler(async (req,res)=> {
         throw new ApiError(400,"course or lecture id is invalid");
     }
 
+    console.log(courseId);
+
     const course = await Course.findById(courseId);
+
+    console.log(course);
 
     if (!course) {
         throw new ApiError(400,"course not found");
@@ -242,13 +253,18 @@ const getLecturesByCourseId = asyncHandler(async (req,res)=> {
         throw new ApiError("Invalid courseId");
     }
 
+    console.log(courseId);
+
     const course = await Course.findById(courseId);
+
+    console.log(course);
 
     if (!course) {
         throw new ApiError(400,"course not found");
     }
 
     const lectures = course.lectures;
+    console.log(lectures);
 
     return res
     .status(200)

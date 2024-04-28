@@ -82,6 +82,7 @@ const verifySubscription = asyncHandler(async (req,res)=> {
 
     user.subscription.status = "active";
     await user.save();
+    console.log(user);
 
     if (!payment) {
         throw new ApiError(500,"payment not created");
@@ -129,9 +130,16 @@ const cancelSubscription = asyncHandler(async (req,res)=> {
 
 const allPayments = asyncHandler(async (req,res)=> {
     const {count} = req.query;
+    const startDate = new Date(2024, 4 - 1, 1).toDateString();
 
     const allPayment = await razorpay.subscriptions.all({
-        count:count || 10
+        count:count || 10,
+        status:"completed",
+    });
+
+    const monthlySale = await razorpay.subscriptions.all({
+        count:count || 10,
+        from:startDate
     });
 
     return res
@@ -139,7 +147,7 @@ const allPayments = asyncHandler(async (req,res)=> {
     .json(
         new ApiResponse(
             200,
-            allPayment,
+            {allPayment,monthlySale},
             "Payment fetched successfully"
         )
     );
